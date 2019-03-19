@@ -52,7 +52,7 @@ contract SupplyChain is Ownable,
     string  originFarmInformation;  // Farmer Information
     string  originFarmLatitude; // Farm Latitude
     string  originFarmLongitude;  // Farm Longitude
-    bytes8    productID;  // Product ID potentially a combination of upc + sku
+    uint    productID;  // Product ID potentially a combination of upc + sku
     string  productNotes; // Product Notes
     uint    productPrice; // Product Price
     State   itemState;  // Product State as represented in the enum above
@@ -85,16 +85,16 @@ contract SupplyChain is Ownable,
 
   // Define a modifier that checks if the paid amount is sufficient to cover the price
   modifier paidEnough(uint _price) { 
-    require(msg.value >= _price); 
+    require(msg.value >= _price,"Amount less than price"); 
     _;
   }
   
   // Define a modifier that checks the price and refunds the remaining balance
   modifier checkValue(uint _upc) {
-    _;
     uint _price = items[_upc].productPrice;
     uint amountToReturn = msg.value - _price;
     msg.sender.transfer(amountToReturn);
+    _;
   }
 
   // Define a modifier that checks if an item.state of a upc is Harvested
@@ -117,7 +117,7 @@ contract SupplyChain is Ownable,
 
   // Define a modifier that checks if an item.state of a upc is ForSale
   modifier forSale(uint _upc) {
-    require(items[_upc].itemState == State.ForSale);
+    require(items[_upc].itemState == State.ForSale,"Item state invalid");
     _;
   }
 
@@ -174,7 +174,8 @@ contract SupplyChain is Ownable,
     item.originFarmLongitude = _originFarmLongitude;
     item.productNotes = _productNotes;
     item.sku = sku;
-    item.productID = bytes8(keccak256(abi.encodePacked(sku,_upc)));//8bit productId is sufficient.
+    //item.productID = bytes8(keccak256(abi.encodePacked(sku,_upc)));//8bit productId is sufficient.
+    item.productID = sku + _upc;
     item.itemState = State.Harvested;
     emit Harvested(_upc);
   }
@@ -208,21 +209,15 @@ contract SupplyChain is Ownable,
   // Use the above defined modifiers to check if the item is available for sale, if the buyer has paid enough, 
   // and any excess ether sent is refunded back to the buyer
   function buyItem(uint _upc) public payable 
-    // Call modifier to check if upc has passed previous supply chain stage
     forSale(_upc)
-    // Call modifer to check if buyer has paid enough
     paidEnough(msg.value)
-    // Call modifer to send any excess ether back to buyer
     checkValue(_upc)
   {
     Item storage item = items[_upc];
-    // Update the appropriate fields - ownerID, distributorID, itemState
     item.ownerID = msg.sender;
     item.distributorID = msg.sender;
     item.itemState = State.Sold;
-    // Transfer money to farmer
     item.originFarmerID.transfer(item.productPrice);
-    // emit the appropriate event
     emit Sold(_upc);
   }
 
@@ -235,26 +230,20 @@ contract SupplyChain is Ownable,
       onlyDistributor()
   {
     Item storage item = items[_upc];
-      // Update the appropriate fields
     item.itemState = State.Shipped;  
-      // Emit the appropriate event
     emit Shipped(_upc);
   }
 
   // Define a function 'receiveItem' that allows the retailer to mark an item 'Received'
   // Use the above modifiers to check if the item is shipped
   function receiveItem(uint _upc) public 
-    // Call modifier to check if upc has passed previous supply chain stage
     shipped(_upc)
-    // Access Control List enforced by calling Smart Contract / DApp
     onlyRetailer()
-    {
-    // Update the appropriate fields - ownerID, retailerID, itemState
+  {
     Item storage item = items[_upc];
     item.ownerID = msg.sender;
     item.retailerID = msg.sender;
     item.itemState = State.Received;
-    // Emit the appropriate event
     emit Received(_upc);
   }
 
@@ -317,7 +306,7 @@ contract SupplyChain is Ownable,
   (
   uint    itemSKU,
   uint    itemUPC,
-  bytes8    productID,
+  uint    productID,
   string memory  productNotes,
   uint    productPrice,
   State    itemState,
