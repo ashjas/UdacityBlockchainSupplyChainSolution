@@ -74,7 +74,7 @@ App = {
         }
         // If no injected web3 instance is detected, fall back to Ganache
         else {
-            App.web3Provider = new Web3.providers.HttpProvider('http://localhost:7545');
+            App.web3Provider = new Web3.providers.HttpProvider('http://localhost:9545');
         }
 
         App.getMetaskAccountID();
@@ -99,7 +99,7 @@ App = {
 
     initSupplyChain: function () {
         /// Source the truffle compiled smart contracts
-        var jsonSupplyChain='sc/build/contracts/SupplyChain.json';
+        var jsonSupplyChain='build/contracts/SupplyChain.json';
         
         /// JSONfy the smart contracts
         $.getJSON(jsonSupplyChain, function(data) {
@@ -164,6 +164,9 @@ App = {
     },
 
     harvestItem: function(event) {
+        web3 = new Web3(App.web3Provider);
+        console.log('provider: ' +window.web3.currentProvider);
+        web3.version.getNetwork(function(err,res){console.log(res)});
         event.preventDefault();
         var processId = parseInt($(event.target).data('id'));
 
