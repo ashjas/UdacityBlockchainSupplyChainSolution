@@ -7,7 +7,7 @@ contract('SupplyChain', function(accounts) {
     var sku = 2
     var upc = 1
     const ownerID = accounts[0]
-    const originFarmerID = accounts[1]
+    const originFarmerID = accounts[0]
     const originFarmName = "John Doe"
     const originFarmInformation = "Yarray Valley"
     const originFarmLatitude = "-38.239770"
@@ -30,7 +30,7 @@ contract('SupplyChain', function(accounts) {
 
     it("Adding proper addresses", async() => {
         const supplyChain = await SupplyChain.deployed()
-        await supplyChain.addFarmer(originFarmerID);
+        //await supplyChain.addFarmer(originFarmerID);
         await supplyChain.addDistributor(distributorID);
         await supplyChain.addRetailer(retailerID);
         await supplyChain.addConsumer(consumerID);

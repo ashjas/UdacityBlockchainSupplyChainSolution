@@ -12,7 +12,7 @@ contract SupplyChain is Ownable,
                         RetailerRole {
 
   // Define 'owner'
-  address owner;
+  //address owner;
 
   // Define a variable called 'upc' for Universal Product Code (UPC)
   uint  upc;
@@ -72,10 +72,10 @@ contract SupplyChain is Ownable,
   event Purchased(uint upc);
 
   // Define a modifer that checks to see if msg.sender == owner of the contract
-  modifier onlyOwner() {
+  /*modifier onlyOwner() {
     require(msg.sender == owner);
     _;
-  }
+  }*/
 
   // Define a modifer that verifies the Caller
   modifier verifyCaller (address _address) {
@@ -146,20 +146,21 @@ contract SupplyChain is Ownable,
   }
 
   constructor() public payable {
-    owner = msg.sender;
+    //owner = msg.sender;
     sku = 1;
     upc = 1;
   }
 
   // Define a function 'kill' if required
-  function kill() public {
-    if (msg.sender == owner) {
-      selfdestruct(owner);
-    }
+  function kill() public onlyOwner()
+  {
+    //if (msg.sender == owner) {
+      selfdestruct(getOwner());
+    //}
   }
 
   // Define a function 'harvestItem' that allows a farmer to mark an item 'Harvested'
-  function harvestItem(uint _upc, address _originFarmerID, string _originFarmName, string _originFarmInformation, string  _originFarmLatitude, string  _originFarmLongitude, string  _productNotes) public onlyFarmer()
+  function harvestItem(uint _upc, address _originFarmerID, string _originFarmName, string _originFarmInformation, string  _originFarmLatitude, string  _originFarmLongitude, string  _productNotes) public onlyFarmer() onlyOwner()
   {
     sku = sku + 1; 
     items[_upc].upc = _upc;
@@ -177,21 +178,21 @@ contract SupplyChain is Ownable,
   }
 
   // Define a function 'processtItem' that allows a farmer to mark an item 'Processed'
-  function processItem(uint _upc) public harvested(_upc) onlyFarmer()
+  function processItem(uint _upc) public harvested(_upc) onlyFarmer() onlyOwner()
   {
     items[_upc].itemState = State.Processed; 
     emit Processed(_upc);
   }
 
   // Define a function 'packItem' that allows a farmer to mark an item 'Packed'
-  function packItem(uint _upc) public processed(_upc) onlyFarmer()
+  function packItem(uint _upc) public processed(_upc) onlyFarmer() onlyOwner()
   {
     items[_upc].itemState = State.Packed; 
     emit Packed(_upc);
   }
 
   // Define a function 'sellItem' that allows a farmer to mark an item 'ForSale'
-  function sellItem(uint _upc, uint _price) public packed(_upc) onlyFarmer()
+  function sellItem(uint _upc, uint _price) public packed(_upc) onlyFarmer() onlyOwner()
   {
     items[_upc].itemState = State.ForSale; 
     items[_upc].productPrice = _price;
